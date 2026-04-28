@@ -133,6 +133,10 @@ Thumbs.db
 nginx/ssl/*
 !nginx/ssl/.gitkeep
 
+# Firebase Service Account Keys
+*-firebase-adminsdk-*.json
+firebase-adminsdk-*.json
+
 # =============================================================================
 # Large Binary Files
 # =============================================================================
