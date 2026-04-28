@@ -170,7 +170,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: recrutement_backend_worker
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=90 --queue=default,high,emails
     environment:
@@ -271,7 +270,6 @@ services:
     build:
       context: ./ai
       dockerfile: Dockerfile.worker
-    container_name: recrutement_ai_worker
     restart: unless-stopped
     environment:
       DEBUG: "False"
