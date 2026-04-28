@@ -1,0 +1,13 @@
+{
+  "name": "RecrutiTN Admin",
+  "short_name": "RecrutiTN",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "prefer_related_applications": false,
+  "gcm_sender_id": "103953800507",
+  "permissions": [
+    "notifications"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "success": true,
+  "final_score": 0.4761,
+  "semantic_score": 0.6413,
+  "skill_coverage": 0.25,
+  "experience_score": 0.0,
+  "education_score": 0.75,
+  "experience_relevance": 0.5,
+  "confidence_score": 0.644,
+  "confidence_components": {
+    "data_quality": 0.8,
+    "skill_coverage": 0.625,
+    "experience_alignment": 0.35,
+    "education_alignment": 0.9,
+    "parsing_confidence": 0.8
+  },
+  "cv_quality": {
+    "completeness": 1.0,
+    "structure": 0.75,
+    "consistency": 0.9,
+    "overall": 0.887
+  },
+  "gate_status": "PASS",
+  "gate_reason": "No critical requirements specified",
+  "z_score": 0.0,
+  "weights_used": {
+    "semantic": 0.45,
+    "skills": 0.25,
+    "experience": 0.2,
+    "education": 0.1
+  },
+  "matched_skills": [
+    {
+      "job_skill": "java",
+      "cv_skill": "java",
+      "match_type": "exact",
+      "score": 1.0
+    }
+  ],
+  "missing_skills": [
+    "html",
+    "docker",
+    "css"
+  ],
+  "missing_critical": [],
+  "transferable_skills": [],
+  "rarity_boost_applied": true,
+  "explanation": {
+    "summary": "Below average match (48%). Significant gaps identified.",
+    "strengths": [
+      "Exact match: java"
+    ],
+    "gaps": [
+      "Missing: html",
+      "Missing: docker",
+      "Missing: css"
+    ],
+    "interpretation": "Lower score primarily due to 3 missing skills and no critical requirements specified.",
+    "confidence_explanation": "Lower confidence due to: skill_coverage, experience_alignment.",
+    "recommendation": "REJECT - Below threshold, significant gaps in requirements.",
+    "improvement_suggestion": "Consider developing: html",
+    "score": 0.4761,
+    "gate_status": "PASS",
+    "v3": true
+  },
+  "elapsed_time": 0.11
+}

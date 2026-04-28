@@ -1,0 +1,70 @@
+# =============================================================================
+# RecrutiTN AI Worker - Celery Background Tasks
+# =============================================================================
+# Handles: CV processing, document chunking, quiz generation, notifications
+# Scales independently from API - can run multiple replicas
+# =============================================================================
+
+FROM python:3.11-slim-bookworm
+
+# -----------------------------------------------------------------------------
+# Build Arguments & Environment
+# -----------------------------------------------------------------------------
+ARG DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# -----------------------------------------------------------------------------
+# System Dependencies (Same as API for consistency)
+# -----------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-fra \
+    poppler-utils \
+    libpq-dev \
+    gcc \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# -----------------------------------------------------------------------------
+# Python Dependencies
+# -----------------------------------------------------------------------------
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Download NLTK data
+RUN python -c "import nltk; nltk.download('punkt', quiet=True)"
+
+# -----------------------------------------------------------------------------
+# Application Code
+# -----------------------------------------------------------------------------
+COPY . .
+
+# Create directories
+RUN mkdir -p /app/media /app/kb_documents /app/logs
+
+# -----------------------------------------------------------------------------
+# Security: Non-root user
+# -----------------------------------------------------------------------------
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
+    chown -R appuser:appgroup /app
+USER appuser
+
+# -----------------------------------------------------------------------------
+# Celery Worker Configuration
+# -----------------------------------------------------------------------------
+# --concurrency=2: Run 2 worker processes (adjust based on CPU)
+# --prefetch-multiplier=1: Fair task distribution
+# --max-tasks-per-child=1000: Prevent memory leaks
+# --loglevel=info: Production logging
+CMD ["celery", "-A", "ai", "worker", \
+     "--loglevel=info", \
+     "--concurrency=2", \
+     "--prefetch-multiplier=1", \
+     "--max-tasks-per-child=1000", \
+     "-Q", "celery,high_priority,default"]

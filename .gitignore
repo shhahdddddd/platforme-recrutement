@@ -1,0 +1,146 @@
+# =============================================================================
+# RecrutiTN - Git Ignore File
+# =============================================================================
+
+# =============================================================================
+# Python / AI Service
+# =============================================================================
+ai/env/
+ai/__pycache__/
+ai/*/__pycache__/
+ai/*.pyc
+ai/*.pyo
+ai/*.pyd
+ai/.pytest_cache/
+ai/.mypy_cache/
+ai/.coverage
+ai/htmlcov/
+ai/media/*
+!ai/media/.gitkeep
+ai/kb_documents/*
+!ai/kb_documents/.gitkeep
+ai/test_*.py
+ai/matching_result_*.json
+
+# =============================================================================
+# PHP / Laravel Backend
+# =============================================================================
+backend/vendor/
+backend/node_modules/
+backend/storage/*.key
+backend/storage/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/.phpunit.result.cache
+backend/Homestead.json
+backend/Homestead.yaml
+backend/npm-debug.log
+backend/yarn-error.log
+backend/check_*.php
+backend/rescore_*.php
+backend/clear_*.php
+
+# =============================================================================
+# Node / Angular Admin
+# =============================================================================
+admin/node_modules/
+admin/dist/
+admin/.angular/
+admin/.nx/
+admin/npm-debug.log
+admin/yarn-error.log
+admin/.env.local
+admin/.env.*.local
+
+# =============================================================================
+# Flutter / Mobile Frontend
+# =============================================================================
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/build/
+frontend/.android/
+frontend/.ios/
+frontend/*.apk
+frontend/*.aab
+frontend/*.ipa
+frontend/frontend.iml
+frontend/.idea/
+frontend/.vscode/
+frontend/*.log
+
+# =============================================================================
+# Docker
+# =============================================================================
+.env
+.env.local
+.env.*.local
+.env.secrets
+docker-compose.override.yml
+
+# =============================================================================
+# Logs & Temporary Files
+# =============================================================================
+*.log
+*.tmp
+*.temp
+temp_*.txt
+last_*.json
+last_*.txt
+app_data.json
+
+# =============================================================================
+# IDE & Editor
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# Database
+# =============================================================================
+*.sqlite
+*.sqlite3
+*.db
+
+# =============================================================================
+# OS Generated Files
+# =============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================================================
+# Certificates & Keys
+# =============================================================================
+*.pem
+*.key
+*.crt
+*.csr
+nginx/ssl/*
+!nginx/ssl/.gitkeep
+
+# =============================================================================
+# Large Binary Files
+# =============================================================================
+*.pdf
+!backend/database/init/*.pdf
+*.zip
+*.tar.gz
+*.rar

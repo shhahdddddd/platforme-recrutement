@@ -1,0 +1,260 @@
+@startuml Recruitment Platform Architecture
+
+!define RECTANGLE class
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+skinparam rectangle {
+    BackgroundColor<<Client>> #E3F2FD
+    BackgroundColor<<Backend>> #E8F5E9
+    BackgroundColor<<AI>> #FFF3E0
+    BackgroundColor<<Data>> #F3E5F5
+    BackgroundColor<<External>> #FFEBEE
+    BackgroundColor<<Infra>> #ECEFF1
+    BorderColor #333
+}
+
+skinparam cloud {
+    BackgroundColor #E1F5FE
+    BorderColor #0288D1
+}
+
+title Recruitment Platform - System Architecture
+
+' ============================================
+' CLIENT LAYER
+' ============================================
+package "Client Layer" <<Client>> {
+    rectangle "Flutter Mobile App\n(iOS/Android)" as Flutter <<Client>> {
+        component "BLoC State Management" as Bloc
+        component "DIO HTTP Client" as Dio
+        component "Secure Storage" as SecureStore
+        component "FCM Notifications" as FCMClient
+    }
+    
+    rectangle "Angular Admin Portal\n(Web Dashboard)" as Angular <<Client>> {
+        component "Services Layer" as NgServices
+        component "Auth Interceptor" as AuthInterceptor
+        component "WebSocket Client" as WsClient
+        component "Firebase Messaging" as FCMWeb
+    }
+}
+
+' ============================================
+' API GATEWAY / LOAD BALANCER
+' ============================================
+cloud "HTTPS/TLS" as TLS
+
+' ============================================
+' BACKEND LAYER - LARAVEL
+' ============================================
+package "Laravel Backend (Port 8000)" <<Backend>> {
+    rectangle "Laravel API Server\nPHP 8.4-FPM" as Laravel <<Backend>> {
+        component "Controllers\n(REST API)" as Controllers
+        component "Keycloak Service\n(IAM Integration)" as KeycloakService
+        component "Queue Workers\n(Celery/Redis)" as QueueWorkers
+        component "Eloquent ORM" as Eloquent
+        component "Event System\n(WebSockets)" as Events
+    }
+    
+    rectangle "Laravel Queue Worker" as LaravelWorker <<Backend>>
+}
+
+' ============================================
+' AI LAYER - DJANGO
+' ============================================
+package "AI Service (Port 8001)" <<AI>> {
+    rectangle "Django AI Service\nPython + Daphne" as Django <<AI>> {
+        component "RAG Pipeline\n(LangChain/LangGraph)" as RAG
+        component "CV Scoring Engine\n(BGE-M3 Embeddings)" as CVScorer
+        component "Quiz Generator\n(LLM Orchestration)" as QuizGen
+        component "Vector Search\n(ChromaDB)" as VectorSearch
+        component "Django Channels\n(WebSockets)" as Channels
+        component "Celery Workers\n(Async Tasks)" as CeleryAI
+    }
+}
+
+' ============================================
+' IDENTITY & ACCESS MANAGEMENT
+' ============================================
+package "IAM Layer" <<Infra>> {
+    rectangle "Keycloak\n(Port 8080)" as Keycloak <<Infra>> {
+        component "OAuth2/OIDC\nAuthentication" as OAuth
+        component "User Federation\n(Roles & Groups)" as UserFed
+    }
+}
+
+' ============================================
+' DATA LAYER
+' ============================================
+package "Data Layer" <<Data>> {
+    database "PostgreSQL\n(PGVector)" as Postgres <<Data>> {
+        component "Laravel Schema\n(Users, Jobs, Companies)" as LaravelDB
+        component "Django Schema\n(AI Sessions, Quizzes)" as DjangoDB
+        component "Vector Extension\n(PGVector)" as PGVector
+    }
+    
+    database "Redis\n(Port 6379)" as Redis <<Data>> {
+        component "Cache Store" as Cache
+        component "Message Broker\n(Celery)" as Broker
+        component "Pub/Sub Channels\n(WebSockets)" as PubSub
+    }
+    
+    database "ChromaDB\n(Vector Store)" as ChromaDB <<Data>> {
+        component "Document Embeddings\n(BGE-M3)" as Embeddings
+        component "Knowledge Base\n(PDF Ingestion)" as KnowledgeBase
+    }
+}
+
+' ============================================
+' MESSAGE QUEUE
+' ============================================
+rectangle "Message Queue" as MessageQueue <<Infra>>
+
+' ============================================
+' EXTERNAL SERVICES
+' ============================================
+package "External Services" <<External>> {
+    cloud "Firebase Cloud\nMessaging" as Firebase <<External>> {
+        component "Push Notifications\n(FCM)" as PushNotif
+    }
+    
+    rectangle "Ollama\n(Local LLM)" as Ollama <<External>> {
+        component "phi3:latest\n(Fast Inference)" as Phi3
+        component "nomic-embed-text\n(Embeddings)" as NomicEmbed
+    }
+    
+    cloud "External LLM APIs" as ExternalLLM <<External>> {
+        component "Groq API\n(llama-3.3-70b)" as Groq
+        component "OpenRouter\n(meta-llama)" as OpenRouter
+        component "Google Gemini\n(1.5 Flash)" as Gemini
+    }
+    
+    rectangle "Email Service\n(MailHog - Dev)" as MailHog <<External>>
+}
+
+' ============================================
+' DOCKER INFRASTRUCTURE
+' ============================================
+package "Docker Infrastructure" <<Infra>> {
+    rectangle "Docker Network\n(Bridge)" as DockerNet <<Infra>>
+    rectangle "Docker Volumes" as DockerVolumes <<Infra>> {
+        component "postgres_data" as VolPostgres
+        component "redis_data" as VolRedis
+    }
+}
+
+' ============================================
+' CONNECTIONS - CLIENT TO API
+' ============================================
+Flutter --> TLS : HTTPS/JSON
+Angular --> TLS : HTTPS/JSON
+TLS --> Laravel : Port 8000
+
+' ============================================
+' CONNECTIONS - AUTHENTICATION
+' ============================================
+Flutter ..> Keycloak : OAuth2 PKCE
+Angular ..> Keycloak : OAuth2/OIDC
+Laravel ..> Keycloak : Token Validation
+
+' ============================================
+' CONNECTIONS - LARAVEL INTERNAL
+' ============================================
+Controllers --> KeycloakService
+Controllers --> Eloquent
+Controllers --> Events
+QueueWorkers --> MessageQueue
+LaravelWorker --> MessageQueue
+
+' ============================================
+' CONNECTIONS - LARAVEL TO DATA
+' ============================================
+Eloquent --> Postgres : SQL
+Laravel --> Redis : Cache/Sessions
+Events --> Redis : Pub/Sub
+
+' ============================================
+' CONNECTIONS - LARAVEL TO AI SERVICE
+' ============================================
+Laravel ..> Django : HTTP REST API\nPort 8001
+Controllers ..> CVScorer : /api/score/
+Controllers ..> QuizGen : /api/quiz/launch/
+Controllers ..> RAG : /api/documents/
+
+' ============================================
+' CONNECTIONS - DJANGO INTERNAL
+' ============================================
+Django --> RAG
+RAG --> VectorSearch
+RAG --> CVScorer
+RAG --> QuizGen
+CeleryAI --> MessageQueue
+Channels --> Redis
+
+' ============================================
+' CONNECTIONS - DJANGO TO DATA
+' ============================================
+Django --> Postgres : SQL
+Django --> ChromaDB : Vector Search
+VectorSearch --> Embeddings
+
+' ============================================
+' CONNECTIONS - REDIS AS BROKER
+' ============================================
+Redis --> Broker
+Broker --> MessageQueue
+MessageQueue --> CeleryAI
+MessageQueue --> QueueWorkers
+MessageQueue --> LaravelWorker
+
+' ============================================
+' CONNECTIONS - EXTERNAL SERVICES
+' ============================================
+Laravel ..> Firebase : FCM API
+Firebase --> Flutter : Push Notifications
+Firebase --> Angular : Push Notifications
+
+Django ..> Ollama : Local API\nPort 11434
+Django ..> Groq : HTTP API
+Django ..> OpenRouter : HTTP API
+Django ..> Gemini : HTTP API
+
+Laravel ..> MailHog : SMTP\nPort 1025
+
+' ============================================
+' CONNECTIONS - DOCKER
+' ============================================
+DockerNet --> Laravel
+DockerNet --> LaravelWorker
+DockerNet --> Django
+DockerNet --> Redis
+DockerNet --> Keycloak
+DockerVolumes --> Postgres
+DockerVolumes --> Redis
+
+' ============================================
+' LEGEND
+' ============================================
+legend right
+  |= Color |= Layer |
+  | <#E3F2FD>      | Client       |
+  | <#E8F5E9>      | Backend      |
+  | <#FFF3E0>      | AI Service   |
+  | <#F3E5F5>      | Data Store   |
+  | <#FFEBEE>      | External     |
+  | <#ECEFF1>      | Infrastructure |
+  
+  **Ports:**
+  - Laravel API: 8000
+  - Django AI: 8001
+  - Keycloak: 8080
+  - Redis: 6379
+  - PostgreSQL: 5432
+  - MailHog SMTP: 1025
+  - MailHog Web: 8025
+  - Ollama: 11434
+endlegend
+
+@enduml

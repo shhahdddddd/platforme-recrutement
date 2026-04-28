@@ -1,0 +1,1 @@
+{"status":"error","msg":"Expected response code \"354\" but got code \"550\", with message \"550 5.7.0 Too many emails per second. Please upgrade your plan https:\/\/mailtrap.io\/billing\/plans\/testing\"."}

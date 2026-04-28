@@ -1,0 +1,33 @@
+# =============================================================================
+# RecrutiTN AI Scheduler - Celery Beat
+# =============================================================================
+# Handles: Periodic tasks, scheduled jobs, cleanup tasks
+# Lightweight - only needs to run 1 instance
+# =============================================================================
+
+FROM python:3.11-slim-bookworm
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Minimal dependencies (no OCR needed for scheduler)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    gcc \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+USER appuser
+
+# Celery Beat - Scheduler daemon
+CMD ["celery", "-A", "ai", "beat", "--loglevel=info", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler"]

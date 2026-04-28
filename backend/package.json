@@ -1,0 +1,23 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "npm run development",
+        "development": "mix",
+        "watch": "mix watch",
+        "watch-poll": "mix watch -- --watch-options-poll=1000",
+        "hot": "mix watch --hot",
+        "prod": "npm run production",
+        "production": "mix --production",
+        "https": "node https-server.js",
+        "serve:https": "concurrently \"\\\"C:\\Program Files\\php-8.5.1-nts-Win32-vs17-x64\\php.exe\\\" -c php-cli.ini -S 127.0.0.1:8001 -t public\" \"node https-server.js\"",
+        "serve:laravel": "\"C:\\Program Files\\php-8.5.1-nts-Win32-vs17-x64\\php.exe\" -c php-cli.ini -S 127.0.0.1:8001 -t public"
+    },
+    "devDependencies": {
+        "axios": "^0.25",
+        "concurrently": "^8.2.2",
+        "laravel-mix": "^6.0.6",
+        "lodash": "^4.17.19",
+        "postcss": "^8.1.14",
+        "selfsigned": "^2.4.1"
+    }
+}
