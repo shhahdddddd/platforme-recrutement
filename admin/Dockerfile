@@ -21,10 +21,7 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 
 # Production build with optimization
-RUN npm run build -- \
-    --configuration=production \
-    --output-hashing=all \
-    --vendor-chunk=true
+RUN npm run build -- --configuration=production
 
 # -----------------------------------------------------------------------------
 # Stage 2: Production Server (Nginx)
