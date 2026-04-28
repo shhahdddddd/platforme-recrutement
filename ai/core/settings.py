@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables
 _backend_env = BASE_DIR.parent / 'backend' / '.env'
 _ai_env = BASE_DIR / '.env'
 
@@ -10,10 +13,12 @@ if _backend_env.exists():
 elif _ai_env.exists():
     load_dotenv(_ai_env)
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-d9sj!b8!3z6ha53!rube6%d5!1#+o8jhdq3dn53c+#vzp*j@49')
+# SECURITY
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-placeholder')
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
+# APPLICATIONS
 INSTALLED_APPS = [
     'daphne',
     'channels',
@@ -30,6 +35,7 @@ INSTALLED_APPS = [
     'django_celery_results',
 ]
 
+# MIDDLEWARE
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -42,6 +48,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -59,18 +66,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database - Using the same PostgreSQL as Laravel
+# DATABASE
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_DATABASE', 'recrutement'),
         'USER': os.getenv('DB_USERNAME', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'shahd123'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
+# AUTH VALIDATORS
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -78,65 +86,68 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# INTERNATIONALIZATION
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# STATIC
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Celery Configuration
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+# CELERY
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
-# Storage / MinIO Simulation (for now local, but structured for S3)
+# MEDIA
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# DRF
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ]
 }
 
-# AI Settings
+# AI SETTINGS
 OLLAMA_URL = os.getenv('OLLAMA_URL', 'http://localhost:11434/api/generate')
 OLLAMA_EMBED_URL = os.getenv('OLLAMA_EMBED_URL', 'http://localhost:11434/api/embed')
 BGE_M3_MODEL = 'BAAI/bge-m3'
 
-# LLM Model Selection
-OLLAMA_FAST_MODEL = os.getenv('OLLAMA_FAST_MODEL', 'phi3:latest')      # For classification, routing, grading
-OLLAMA_SYNTH_MODEL = os.getenv('OLLAMA_SYNTH_MODEL', 'phi3:latest')    # For question synthesis
+# MODELS
+OLLAMA_FAST_MODEL = os.getenv('OLLAMA_FAST_MODEL', 'phi3:latest')
+OLLAMA_SYNTH_MODEL = os.getenv('OLLAMA_SYNTH_MODEL', 'phi3:latest')
 
-GROQ_API_KEY = os.getenv('GROQ_API_KEY', 'YOUR_GROQ_API_KEY_HERE')
-OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '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')
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyAwBY_52jQNOjhU2pQVqu21gqie-TTvsiA')
+# 🔐 API KEYS (SAFE)
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')
 OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openrouter/auto')
 GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'models/gemini-2.5-flash')
 
-# Connectivity
+# CONNECTIVITY
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://127.0.0.1:8001')
 REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
 
-# ChromaDB Vector Store Configuration
+# CHROMA DB
 CHROMA_PERSIST_DIR = os.getenv('CHROMA_PERSIST_DIR', str(BASE_DIR / 'chroma_data'))
 OLLAMA_EMBED_MODEL = os.getenv('OLLAMA_EMBED_MODEL', 'nomic-embed-text')
 
-# Encryption Configuration for Sensitive Data at Rest
-# Generate a key with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', None)
-# If ENCRYPTION_KEY is not set, encryption will derive from SECRET_KEY (not recommended for production)
+# ENCRYPTION
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 
-# Channels (WebSocket) Configuration
+# CHANNELS
 ASGI_APPLICATION = 'core.asgi.application'
 
 CHANNEL_LAYERS = {
