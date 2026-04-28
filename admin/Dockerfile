@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Install dependencies first (better caching)
 COPY package*.json ./
-RUN npm ci --production=false --silent
+RUN npm ci --legacy-peer-deps
 
 # Copy source and build
 COPY . .
@@ -23,10 +23,8 @@ COPY . .
 # Production build with optimization
 RUN npm run build -- \
     --configuration=production \
-    --aot \
     --output-hashing=all \
-    --vendor-chunk=true \
-    --common-chunk=true
+    --vendor-chunk=true
 
 # -----------------------------------------------------------------------------
 # Stage 2: Production Server (Nginx)
