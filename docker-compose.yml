@@ -1,8 +1,9 @@
 # =============================================================================
-# RecrutiTN - Complete Production Docker Compose
+# RecrutiTN - Production Docker Compose
 # =============================================================================
-# Orchestrates: Database, Cache, Auth, Backend API, AI Microservices, Admin Panel
+# Orchestrates: Database, Cache, Auth, Backend API, Admin Panel
 # Version: 1.0.0
+# Note: AI service runs separately (not dockerized)
 # =============================================================================
 
 version: "3.9"
@@ -57,27 +58,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-
-  # ChromaDB vector database for RAG
-  chromadb:
-    image: chromadb/chroma:0.4.24
-    container_name: recrutement_chromadb
-    restart: unless-stopped
-    environment:
-      - IS_PERSISTENT=TRUE
-      - PERSIST_DIRECTORY=/chroma/chroma_data
-      - ANONYMIZED_TELEMETRY=FALSE
-    volumes:
-      - chroma_data:/chroma/chroma_data
-    ports:
-      - "8003:8000"
-    networks:
-      - backend_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/api/v1/heartbeat"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   # ==========================================================================
   # AUTHENTICATION LAYER
@@ -134,8 +114,8 @@ services:
       SESSION_DRIVER: redis
       QUEUE_CONNECTION: redis
       
-      # AI Service
-      AI_SERVICE_URL: http://ai:8002
+      # AI Service (runs on host, not dockerized)
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://host.docker.internal:8002}
       AI_SERVICE_TIMEOUT: 120
       
       # Keycloak
@@ -215,109 +195,6 @@ services:
         condition: service_healthy
 
   # ==========================================================================
-  # AI LAYER (Python/Django)
-  # ==========================================================================
-  
-  # Django AI API
-  ai:
-    build:
-      context: ./ai
-      dockerfile: Dockerfile
-    container_name: recrutement_ai
-    restart: unless-stopped
-    environment:
-      DEBUG: "False"
-      DJANGO_SETTINGS_MODULE: ai.settings
-      
-      # Database
-      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-recrutement}
-      
-      # Redis
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      
-      # Vector DB
-      CHROMA_HOST: chromadb
-      CHROMA_PORT: 8000
-      
-      # AI Models (External APIs preferred over local Ollama)
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
-      
-      # Backend Integration
-      BACKEND_WEBHOOK_URL: http://backend:8000/api/webhooks/ai
-    volumes:
-      - ai_media:/app/media
-      - ai_kb:/app/kb_documents
-    ports:
-      - "8002:8002"
-    networks:
-      - backend_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      chromadb:
-        condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  # Celery Worker for AI Tasks
-  ai_worker:
-    build:
-      context: ./ai
-      dockerfile: Dockerfile.worker
-    restart: unless-stopped
-    environment:
-      DEBUG: "False"
-      DJANGO_SETTINGS_MODULE: ai.settings
-      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-recrutement}
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CHROMA_HOST: chromadb
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
-    volumes:
-      - ai_media:/app/media
-      - ai_kb:/app/kb_documents
-    networks:
-      - backend_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      chromadb:
-        condition: service_healthy
-      ai:
-        condition: service_started
-    deploy:
-      replicas: 2
-
-  # Celery Beat (Scheduler)
-  ai_beat:
-    build:
-      context: ./ai
-      dockerfile: Dockerfile.beat
-    container_name: recrutement_ai_beat
-    restart: unless-stopped
-    environment:
-      DEBUG: "False"
-      DJANGO_SETTINGS_MODULE: ai.settings
-      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-recrutement}
-      CELERY_BROKER_URL: redis://redis:6379/1
-    networks:
-      - backend_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  # ==========================================================================
   # FRONTEND LAYER
   # ==========================================================================
   
@@ -351,7 +228,6 @@ services:
       - "80:80"
       - "443:443"
       - "8081:8081"  # WebSocket (Laravel)
-      - "8082:8082"  # WebSocket (AI)
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - nginx_cache:/var/cache/nginx
@@ -360,8 +236,6 @@ services:
       - backend_network
     depends_on:
       backend:
-        condition: service_healthy
-      ai:
         condition: service_healthy
       admin:
         condition: service_started
@@ -394,15 +268,9 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  chroma_data:
-    driver: local
   backend_storage:
     driver: local
   backend_logs:
-    driver: local
-  ai_media:
-    driver: local
-  ai_kb:
     driver: local
   nginx_cache:
     driver: local
