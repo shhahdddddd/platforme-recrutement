@@ -66,13 +66,10 @@
               "buildTarget": "admin:build:production"
             },
             "development": {
-              "buildTarget": "admin:build:development",
-              "ssl": true,
-              "sslKey": "ssl/key.pem",
-              "sslCert": "ssl/cert.pem"
+              "buildTarget": "admin:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "production"
         },
         "test": {
           "builder": "@angular/build:unit-test"
