@@ -9,15 +9,23 @@ import { routes } from './app-routing.module';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { environment } from '../environments/environment';
 
+// ✅ SAFE CHECK
+const isMessagingSupported =
+  typeof window !== 'undefined' &&
+  'serviceWorker' in navigator &&
+  location.protocol === 'https:';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(
-      withInterceptors([authInterceptor])
-    ),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideCharts(withDefaultRegisterables()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    //provideMessaging(() => getMessaging())
+
+    // ✅ Only enable messaging if supported
+    ...(isMessagingSupported
+      ? [provideMessaging(() => getMessaging())]
+      : [])
   ]
 };
