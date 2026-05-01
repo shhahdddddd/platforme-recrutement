@@ -4,7 +4,6 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getMessaging, provideMessaging } from '@angular/fire/messaging';
 
 import { routes } from './app-routing.module';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -19,7 +18,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor])
     ),
     provideCharts(withDefaultRegisterables()),
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideMessaging(() => getMessaging())
+    provideFirebaseApp(() => initializeApp(environment.firebase))
+    // Note: Messaging initialized lazily in FcmService
   ]
 };
