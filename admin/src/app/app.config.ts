@@ -18,6 +18,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideCharts(withDefaultRegisterables()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideMessaging(() => getMessaging())
+    //provideMessaging(() => getMessaging())
   ]
 };
