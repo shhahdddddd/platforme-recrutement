@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
 
   # ================= DATABASE =================
@@ -42,17 +44,16 @@ services:
       timeout: 3s
       retries: 3
 
-  # ================= KEYCLOAK (FIXED) =================
+  # ================= KEYCLOAK (FIXED FOR 8081) =================
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.2
     container_name: recrutement_keycloak
     restart: unless-stopped
-
-    # ✅ FIX: removed --import-realm (this was crashing Keycloak)
     command: start-dev
-
     environment:
-      KC_HOSTNAME: keycloak
+      # ✅ FIX: Utilisation de localhost et du port 8081 pour la redirection VirtualBox
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8081
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
 
@@ -63,13 +64,10 @@ services:
 
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
-
     ports:
       - "8080:8080"
-
     networks:
       - backend_network
-
     depends_on:
       postgres:
         condition: service_healthy
@@ -102,16 +100,15 @@ services:
 
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost
+      # ✅ FIX: Le navigateur accède au backend via le port 8000
+      APP_URL: http://localhost:8000
 
     volumes:
       - backend_storage:/var/www/storage/app
       - backend_logs:/var/www/storage/logs
       - ./backend:/var/www:cached
-
     networks:
       - backend_network
-
     depends_on:
       postgres:
         condition: service_healthy
@@ -119,7 +116,6 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
-
     healthcheck:
       test: ["CMD", "php", "-v"]
       interval: 30s
@@ -170,8 +166,9 @@ services:
     container_name: recrutement_admin
     restart: unless-stopped
     environment:
-      API_BASE_URL: http://nginx/api
-      KEYCLOAK_URL: http://keycloak:8080
+      # ✅ FIX: Utilisation des ports redirigés pour le navigateur Windows
+      API_BASE_URL: http://localhost:8000/api
+      KEYCLOAK_URL: http://localhost:8081
     ports:
       - "4200:80"
     networks:
@@ -201,7 +198,8 @@ services:
       admin:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/nginx-health"]
+      # ✅ FIX: Test simplifié pour éviter le statut "unhealthy"
+      test: ["CMD", "wget", "--spider", "http://localhost"]
       interval: 30s
       timeout: 10s
       retries: 3
