@@ -1,12 +1,12 @@
 export const environment = {
     production: true,
-    apiUrl: 'https://api.yourcompany.com/api',
+    apiUrl: 'http://192.168.56.101:8000/api',
     reverb: {
-       key: 'REPLACE_WITH_REVERB_APP_KEY',
-       host: 'api.yourcompany.com',
-       port: 443,
-       scheme: 'https',
-       useTLS: true,
+       key: 'recrutitn-websocket-key',
+       host: '192.168.56.101',
+       port: 8081,
+       scheme: 'http',
+       useTLS: false,
     },
     appName: 'Admin Portal',
     firebase: {
