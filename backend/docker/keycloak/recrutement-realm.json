@@ -1,0 +1,69 @@
+{
+  "realm": "recrutement",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "recruiter",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "candidate",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "company",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "recrutement-api",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@recrutitn.tn",
+      "email": "admin@recrutitn.tn",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "recrutement-api",
+      "roles": ["admin", "recruiter", "candidate", "company"]
+    }
+  ]
+}
