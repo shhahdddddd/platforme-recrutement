@@ -1,5 +1,5 @@
 import { Injectable, inject, EnvironmentInjector, runInInjectionContext } from '@angular/core';
-import { Messaging, getToken, onMessage } from '@angular/fire/messaging';
+import { Messaging, getToken, onMessage, getMessaging } from '@angular/fire/messaging';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from './notification.service';
@@ -9,7 +9,7 @@ import { TokenService } from './token.service';
     providedIn: 'root'
 })
 export class FcmService {
-    private messaging = inject(Messaging);
+    private messaging: Messaging | null = null;
     private http = inject(HttpClient);
     private uiNotification = inject(NotificationService);
     private tokenService = inject(TokenService);
@@ -22,8 +22,17 @@ export class FcmService {
         if (this.initialized) return;
         this.initialized = true;
 
+        // Check browser support first
         if (!this.supportsPushNotifications()) {
-            console.warn('FCM: Push notifications are not supported in this browser context.');
+            console.warn('FCM: Push notifications not supported (requires HTTPS + service worker).');
+            return;
+        }
+
+        // Initialize messaging lazily
+        try {
+            this.messaging = getMessaging();
+        } catch (e) {
+            console.warn('FCM: Failed to initialize Firebase Messaging:', e);
             return;
         }
 
@@ -77,7 +86,7 @@ export class FcmService {
     }
 
     private async registerAndGetToken() {
-        if (!this.supportsPushNotifications()) return;
+        if (!this.supportsPushNotifications() || !this.messaging) return;
 
         try {
             console.log('FCM: Registering service worker...');
@@ -90,9 +99,12 @@ export class FcmService {
                 activationChecks += 1;
             }
 
+            if (!this.messaging) return;
+            const messaging = this.messaging;
+
             console.log('FCM: Fetching push token...');
             const token = await runInInjectionContext(this.injector, () =>
-                getToken(this.messaging, {
+                getToken(messaging, {
                     vapidKey: environment.firebase.vapidKey,
                     serviceWorkerRegistration: registration
                 })
@@ -124,8 +136,10 @@ export class FcmService {
     }
 
     private listenForMessages() {
+        if (!this.messaging) return;
+        const messaging = this.messaging;
         runInInjectionContext(this.injector, () => {
-            onMessage(this.messaging, (payload) => {
+            onMessage(messaging, (payload) => {
                 console.log('FCM: Message received', payload);
                 if (payload.notification?.title) {
                     this.uiNotification.info(payload.notification.title + ': ' + (payload.notification.body || ''));
@@ -135,19 +149,15 @@ export class FcmService {
     }
 
     private handleDetailedError(err: any) {
-        console.error('FCM Error:', err?.name, err?.message);
-
         if (err?.name === 'AbortError') {
             if (!this.abortErrorSeen) {
                 this.abortErrorSeen = true;
-                this.uiNotification.info(
-                    'Push service is unavailable in this browser session. In-app notifications are still active.',
-                    6000
-                );
+                console.log('FCM: Push service unavailable (expected in some browser contexts)');
             }
             return;
         }
 
+        console.error('FCM Error:', err?.name, err?.message);
         this.uiNotification.error('Push notification setup failed. Please try again later.', 5000);
     }
 
