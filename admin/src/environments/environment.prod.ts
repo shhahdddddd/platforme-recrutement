@@ -1,6 +1,6 @@
 export const environment = {
     production: true,
-    apiUrl: 'http://192.168.56.101:8000/api',
+    apiUrl: 'http://192.168.56.101/api',
     reverb: {
        key: 'recrutitn-websocket-key',
        host: '192.168.56.101',
